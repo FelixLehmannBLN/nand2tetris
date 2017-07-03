@@ -42,5 +42,37 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
-}
+        // negate x and y if needed
+        Mux16(a=x, b=false, sel=zx, out=x1);
+        Mux16(a=y, b=false, sel=zy, out=y1);
+
+        // Negate x and y if needed
+        Not16(in=x1, out=notX);
+        Not16(in=y1, out=notY);
+        Mux16(a=x1, b=notX, sel=nx, out=x2);
+        Mux16(a=y1, b=notY, sel=ny, out=y2);
+
+        // 2's complement addition of x and y
+        Add16(a=x2, b=y2, out=out2Compl);
+
+        //bitwise addition of x and y
+        And16(a=x2, b=y2, out=outBit);
+
+        // add x and y depending on f
+        Mux16(a=outBit, b=out2Compl, sel=f, out=tempOut); //needs tempout bc cant use chips output as input for another part
+
+        // negate the output if needed
+        Not16(in=tempOut, out=negOut);
+        Mux16(a=tempOut, b=negOut, sel=no, out=outOut);
+        
+
+        // set zr
+        Or16Way(in=outOut, out=isZeroOut);
+        Not(in=isZeroOut, out=zr);
+
+        // set ng
+        isNegative(in=outOut, out=ng);
+
+        // set final output
+        Or16(a=outOut, b=false, out=out);
+}   
